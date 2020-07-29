@@ -2,6 +2,7 @@ const axios = require('axios');
 
 var crypto = require('./lib/crypto.js')
 var address = require('./lib/address.js')
+var publicKey =require('./lib/publicKey.js')
 
 var Mnemonic = crypto.generateRandomMnemonic(256);
 var wallet = crypto.getKeysFromMnemonic(Mnemonic)
@@ -107,4 +108,7 @@ axios.post(`http://bj1.testnet.lambdastorage.com:13659/bank/accounts/${userlambd
     console.log(error.response.data);
   });
 
+  var lambdapubkey = publicKey.getPublicKey(userWallet.publicKey);
+  
+  console.log('lambdapubkey',lambdapubkey)
 

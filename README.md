@@ -190,17 +190,6 @@ address: lambda1neqj4tcpvzms097zs0a0vjdntwsun3u7n72sna
 var crypto = require('./lib/crypto.js')
 var address = require('./lib/address.js')
 
-var Mnemonic = crypto.generateRandomMnemonic(256);
-var wallet = crypto.getKeysFromMnemonic(Mnemonic)
-
-console.log('Mnemonic:',Mnemonic)
-console.log('publicKey:',wallet.publicKey.toString('base64'))
-console.log('privateKey:',wallet.privateKey.toString('base64'))
-
-
-var lambdaaddress = address.getAddress(wallet.publicKey)
-console.log('address:',lambdaaddress)
-
 //转账交易的数据结构 数据的解释说明见下方
 var fee={
     "amount":[
@@ -235,6 +224,7 @@ var txSendContent = {
 }
 
 var MnemonicUser = `squirrel can parade appear scatter frost resource pen pole category flame rigid uniform cost lava fall rebel rural tunnel involve beyond bomb august bitter`
+
 var userWallet = crypto.getKeysFromMnemonic(MnemonicUser);
 
 var signtxdata = crypto.sign(Buffer.from(JSON.stringify(txSendContent)),userWallet.privateKey);
@@ -247,17 +237,13 @@ console.log('isverify',isverify)
 ```
 输出
 ```
-Mnemonic: craft man license tower click pause rich reason pride scatter brother entire mean dream food rice purity shine crisp spread useless cross resemble warrior
-publicKey: AyplUvRanT+xqaA6Ch3/2HFg9Ohpquo+yzOENysffNV4
-privateKey: saPdDmbCU63DSmQKxSSQUcDpCR1kAW6jT8jefhoRMBU=
-address: lambda14avupcu3d6yevg5aw32429rcn0ng4h7wqcx3mg
 signtxdata ln6wcZw5kur5H5tYA67zpBfyguP1bfD8rpDwnes0pyc6N5fD5n/GDXNfLUl6Bg0l38Yuiko8jVWD+WAMuXGGng==
 isverify true
 ```
 
 ## 3发送交易举例-转账交易
  
- [查看更多交易数据结构说明](Wallet-API.md) 
+ [查看更多交易数据结构说明](http://docs.lambdastorage.com/Wallet-API/) 
 
  发送交易分为三个部分
 
@@ -291,8 +277,6 @@ isverify true
 }
 ```
 每次发起交易前，均要通过账户信息接口获取最新的sequence、account_number
-
-chain_id 可以通过 节点信息接口 /node_info 获取
 http://bj1.testnet.lambdastorage.com:13659/auth/accounts/lambda1prrcl9674j4aqrgrzmys5e28lkcxmntx2gm2zt
 
 chain_id 通过node_info 接口获取
@@ -347,16 +331,6 @@ const axios = require('axios');
 var crypto = require('./lib/crypto.js')
 var address = require('./lib/address.js')
 
-var Mnemonic = crypto.generateRandomMnemonic(256);
-var wallet = crypto.getKeysFromMnemonic(Mnemonic)
-
-console.log('Mnemonic:',Mnemonic)
-console.log('publicKey:',wallet.publicKey.toString('base64'))
-console.log('privateKey:',wallet.privateKey.toString('base64'))
-
-
-var lambdaaddress = address.getAddress(wallet.publicKey)
-console.log('address:',lambdaaddress)
 var fee={
     "amount":[
         {
@@ -400,7 +374,6 @@ var isverify = crypto.verify(Buffer.from(JSON.stringify(txSendContent)),signtxda
 console.log('isverify',isverify)
 
 
-
 var txsend = {
     "tx": {
         "msg": msg,
@@ -438,7 +411,7 @@ axios.post('http://bj1.testnet.lambdastorage.com:13659/txs', txsend)
 一般遇到这个错误，说明拼接的签名用的数据结构不对，或者签名的数据和发送的数据不一致造成的
 
 ## 4 灵活的预估交易需要gas
-[更多交易类型获取gas说明见](Wallet-API.md) 
+[更多交易类型获取gas说明见](http://docs.lambdastorage.com/Wallet-API/) 
 不同的交易类型，对应的获取gas的接口不同
 以转账交易为例
 
@@ -480,16 +453,8 @@ const axios = require('axios');
 var crypto = require('./lib/crypto.js')
 var address = require('./lib/address.js')
 
-var Mnemonic = crypto.generateRandomMnemonic(256);
-var wallet = crypto.getKeysFromMnemonic(Mnemonic)
-
-console.log('Mnemonic:',Mnemonic)
-console.log('publicKey:',wallet.publicKey.toString('base64'))
-console.log('privateKey:',wallet.privateKey.toString('base64'))
 
 
-var lambdaaddress = address.getAddress(wallet.publicKey)
-console.log('address:',lambdaaddress)
 var fee={
     "amount":[
         {
@@ -524,44 +489,7 @@ var txSendContent = {
 
 var MnemonicUser = `squirrel can parade appear scatter frost resource pen pole category flame rigid uniform cost lava fall rebel rural tunnel involve beyond bomb august bitter`
 var userWallet = crypto.getKeysFromMnemonic(MnemonicUser);
-
-var signtxdata = crypto.sign(Buffer.from(JSON.stringify(txSendContent)),userWallet.privateKey);
-
-console.log('signtxdata',signtxdata.toString('base64'))
-
-var isverify = crypto.verify(Buffer.from(JSON.stringify(txSendContent)),signtxdata,userWallet.publicKey)
-console.log('isverify',isverify)
-
-
-
-var txsend = {
-    "tx": {
-        "msg": msg,
-        "fee": fee,
-        "signatures": [{  
-            "signature": signtxdata.toString('base64'), //数据签名的base64格式
-            "pub_key": {
-                "type": "tendermint/PubKeySecp256k1",
-                "value": userWallet.publicKey.toString('base64')  //bip32生成的地址的公钥
-            }
-        }],
-        "memo": ""
-    },
-    "mode": "block"    //发送交易的方式async 为异步，block 为同步
-}
-
-console.log('txsend',JSON.stringify(txsend) )
-axios.post('http://bj1.testnet.lambdastorage.com:13659/txs', txsend)
-  .then(function (response) {
-      console.log('data')
-    console.log(response.data);
-  })
-  .catch(function (error) {
-    console.log('error')
-    console.log(error.data);
-  });
-
-  var userlambdaaddress = address.getAddress(userWallet.publicKey)
+var userlambdaaddress = address.getAddress(userWallet.publicKey)
 
  var  base_req = {
     "sequence": "0",
@@ -633,7 +561,7 @@ exports.ExportprivateKey = function encodePrivateKey(privatekey, password) {
        //调用加密方法进行加密
 	  var cryptoResult = encryptSymmetric(praviteFB, '', userkeyFB);
        /*
-       encryptSymmetric 是tendermint 中的一个加密用的方法，
+       encryptSymmetric 是tendermint 中的一个加密用的方法，稍后会有详细说明
     https://github.com/tendermint/tendermint/blob/3e1516b62427aba1199766fc98943dffe81d7f4b/crypto/xsalsa20symmetric/symmetric.go
        */
 	  var Key = toBuffer(cryptoResult);
@@ -666,7 +594,7 @@ exports.importPrivateKey = function decodePrivateKey(privatekey, usersalt, passw
 
 	  var seed = decryptSymmetric(privatekeyFB, '', userkeyFB);
       /**
-      decryptSymmetric  是tendermint 中的一个解密用的方法，
+      decryptSymmetric  是tendermint 中的一个解密用的方法，稍后会有详细的说明
     https://github.com/tendermint/tendermint/blob/3e1516b62427aba1199766fc98943dffe81d7f4b/crypto/xsalsa20symmetric/symmetric
       **/ 
 	  if (seed == null || seed.length == 0) {
@@ -689,34 +617,71 @@ exports.importPrivateKey = function decodePrivateKey(privatekey, usersalt, passw
 	"publicKey": "lambdapub1addwnpepqvyxh8rxtjymsqty8wkct8hjgf87ueqdrvgpr758x2p32jypzqmcxx269sx"
 }
 ```
-配置文件中的publicKey是带有lambdapub前缀的处理过程如下
+配置文件中的publicKey是带有lambdapub前缀
+代码例子
+在lib 中 新建 publicKey.js
 ```
+
+var Amino = require('./amino.js');
+//通过Amino 库处理公钥  这里参考了 社区对amino 一些方法 的js版本的翻译
+//https://github.com/tendermint/go-amino
+
+/**
+ * Lib helps to work with lambda publicKey.
+ *
+ * @module lib/publicKey
+ */
 const bech32 = require('bech32');
-var Amino = require('****/amino.js');
+/**
+ * @const PREFIX address prefix.
+ *
+ * @type    {String}
+ * @default
+ */
 const PREFIX = 'lambdapub';
 Amino.RegisterConcrete(null, 'tendermint/PubKeySecp256k1');
-
-function getAddress(publicKey) {
-	  var PubKeyAmino = Amino.MarshalBinary('tendermint/PubKeySecp256k1', publicKey);
-//通过Amino 库处理公钥 
-//https://github.com/tendermint/go-amino
-	
-
-	  const words = bech32.toWords(PubKeyAmino);
-        
-	
-       //通过bech32 添加前缀
-	  return bech32.encode(PREFIX, words);
-	}
-```
-从配置文件中带有前缀的公钥解出公钥过程如下
-```
+/**
+ * Get lambda (bech32) public key.
+ *
+ * @param  {Buffer} publicKey Public key
+ * @return {String}           Bech32 address
+ */
+exports.getPublicKey = function getAddress(publicKey) {
+  var PubKeyAmino = Amino.MarshalBinary('tendermint/PubKeySecp256k1', publicKey);
+  const words = bech32.toWords(PubKeyAmino);
+  return bech32.encode(PREFIX, words);
+};
+/**
+ * Get bytes from public key (bech32).
+ *
+ * @param  {String} publicKeybech32
+ * @return {Buffer}
+ */
 function getBytes(publicKeybech32) {
-	  const decoded = bech32.decode(publicKeybech32);
-	
-	  var publicKeyAmino = Buffer.from(bech32.fromWords(decoded.words));
-	  var publicKey = Amino.unMarshalBinary('tendermint/PubKeySecp256k1', publicKeyAmino);
-	  return publicKey;
+  const decoded = bech32.decode(publicKeybech32);
 
-	}
+  var publicKeyAmino = Buffer.from(bech32.fromWords(decoded.words));
+  var publicKey = Amino.unMarshalBinary('tendermint/PubKeySecp256k1', publicKeyAmino);
+  return publicKey;
+}
+exports.getBytes = getBytes;
 ```
+调用例子
+
+```
+const axios = require('axios');
+
+var crypto = require('./lib/crypto.js')
+var address = require('./lib/address.js')
+var publicKey =require('./lib/publicKey.js')
+
+var MnemonicUser = `squirrel can parade appear scatter frost resource pen pole category flame rigid uniform cost lava fall rebel rural tunnel involve beyond bomb august bitter`
+var userWallet = crypto.getKeysFromMnemonic(MnemonicUser);
+var lambdapubkey = publicKey.getPublicKey(userWallet.publicKey);
+  
+console.log('lambdapubkey',lambdapubkey)
+
+```
+### 关于decryptSymmetric和encryptSymmetric 方法的说明
+
+[详细见](Symmetric.md) 
