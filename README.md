@@ -1,5 +1,5 @@
 # 钱包说明文档的示例代码
-
+ 以示例代码为基础，完善的lambda hdkey  https://github.com/LambdaIM/hdkeydemo
 
 ## 1 地址、助记词、加密算法相关
       生成助记词 使用 bip39   钱包和区块链使用长度为256 的24个单词
