@@ -2,9 +2,9 @@
  以示例代码为基础，完善的lambda hdkey  https://github.com/LambdaIM/hdkeydemo
 
 ## 1 地址、助记词、加密算法相关
-      生成助记词 使用 bip39   钱包和区块链使用长度为256 的24个单词
+      生成助记词 使用 bip39   钱包和区块链使用长度为256位的助记词 （24个单词）
 
-      生成hd钱包 使用bip32  derivePath 为  '44\'/364\'/0\'/0/0'
+      生成公钥私钥对 使用bip32  derivePath 为  '44\'/364\'/0\'/0/0'
 
       钱包生成的地址和链生成的地址保持一致 需要使用相同的 derivePath
 
@@ -59,7 +59,7 @@ privateKey: wAx6t5j4IGl9ZWpwKtseWlxDxpEz7rM+f9BNfaO8h4A=
   根据公钥生成地址
  
 
-   生成地址对生成的公钥 进行sha256 加密后，在用Ripemd160 处理， 在用bech32 添加 lambda 对应的前缀
+   生成地址对生成的公钥 进行sha256 加密后，在用Ripemd160 处理， 再用bech32 添加 lambda 对应的前缀
 
 例如  lambda 地址前缀 为lambda：`lambda1z4hs23xwjuudm44nhgcde0zxf5y63su8deuqs3`
 
@@ -141,7 +141,7 @@ address: lambda1neqj4tcpvzms097zs0a0vjdntwsun3u7n72sna
 
 
 ## 2 数据签名相关
-  首先对需要签名的数据进行sha256 计算 ，再对 计算结果和私钥 用 secp256k1 进行签名
+  首先对需要签名的数据进行sha256 计算 ，再对 计算结果和私钥 用 secp256k1 进行计算
 
 在lib目录中  crypto.js  中新增如下的方法
 
@@ -249,9 +249,9 @@ isverify true
 
  发送交易分为三个部分
 
-### 第一部分拼接交易的数据结构用于签名
+### 1拼接交易的数据结构用于签名
 不同的交易类型，msgs数组中的对象的结构会有差别
-手续费部分gas 可以填的大一点，amount 表示gas的价格可以填的小一点
+
 ```
 {
     "account_number": "1",  //通过用户信息获取
@@ -278,6 +278,8 @@ isverify true
     "sequence": "125"  //通过获取用户信息接口获取
 }
 ```
+手续费部分gas 可以填的大一点例如2000000，amount 表示gas的价格可以填的小一点例如1（1ulamb）
+
 每次发起交易前，均要通过账户信息接口获取最新的sequence、account_number
 http://bj1.testnet.lambdastorage.com:13659/auth/accounts/lambda1prrcl9674j4aqrgrzmys5e28lkcxmntx2gm2zt
 
@@ -285,12 +287,12 @@ chain_id 通过node_info 接口获取
 http://bj1.testnet.lambdastorage.com:13659/node_info
 
 ### 2对拼接好的数据进行签名
-例如 对上面字符串签名的结果为的base64
+例如 对第1步数据结构签名的，结果的base64格式
 ```
 fa9bUlNRA3qa9PEYR2py6CgpQbbqVsuKhJRowMdlf90byj7M/2B1YQsu6EPAk1V/tLkKiNwEadkAKNFUxZngGA==
 ```
 ### 3 拼接发送交易的数据
-拼接 交易数据需要注意的是 msg、fee、memo 需要和签名钱的数据中的msgs 、fee、memo 保持一致
+拼接 交易数据需要注意的是 msg、fee、memo 需要和签名的数据中的msgs 、fee、memo 保持一致
 ```
 {
     "tx": {
