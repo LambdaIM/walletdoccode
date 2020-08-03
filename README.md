@@ -689,7 +689,7 @@ console.log('lambdapubkey',lambdapubkey)
 
 [详细见](Symmetric.md) 
 
-## 创建完账、能够签名并发送交易，就可以从矿工哪里购买空间，使用s3 api上传文件了
+## 创建完账户、能够签名并发送交易，就可以从矿工哪里购买空间，使用s3 api上传文件了
 ### 购买空间相关的api和数据结构
 1 获取矿工在售卖空间列表或在浏览器中选择合适矿工的卖单
 ```
@@ -829,7 +829,7 @@ var minioClient = new Minio.Client({
     useSSL: false,
 });
 // 创建bucket
-   minioClient.makeBucket('mybucket', 'us-east-1', function(err) {
+   minioClient.makeBucket('mybucket', '', function(err) {
      if (err) return console.log('Error creating bucket.', err)
      console.log('Bucket created successfully in "us-east-1".')
    })

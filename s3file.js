@@ -16,9 +16,9 @@ minioClient.listBuckets(function (err, buckets) {
 })
 
 //创建bucket
-minioClient.makeBucket('mybucket', 'us-east-1', function (err) {
+minioClient.makeBucket('mybucket', '', function (err) {
   if (err) return console.log('Error creating bucket.', err)
-  console.log('Bucket created successfully in "us-east-1".')
+  console.log('Bucket created successfully in ')
 })
 
 //上传文件
