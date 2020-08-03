@@ -1,5 +1,6 @@
 # 钱包说明文档的示例代码
  以示例代码为基础，完善的lambda hdkey  https://github.com/LambdaIM/hdkeydemo
+可用于测试和演示
 
 ## 1 地址、助记词、加密算法相关
       生成助记词 使用 bip39   钱包和区块链使用长度为256位的助记词 （24个单词）
@@ -689,3 +690,194 @@ console.log('lambdapubkey',lambdapubkey)
 ### 关于decryptSymmetric和encryptSymmetric 方法的说明
 
 [详细见](Symmetric.md) 
+
+## 创建完账户、能够签名并发送交易，就可以从矿工哪里购买空间，使用s3 api上传文件了
+### 购买空间相关的api和数据结构
+1 获取矿工在售卖空间列表或在浏览器中选择合适矿工的卖单
+```
+/market/sellorders/${marketName}/${orderType}/${statusType}/${page}/${limit}
+```
+例如 http://bj1.testnet.lambdastorage.com:13659/market/sellorders/lambdamarket/premium/active/1/10
+orderType 值为premium 表示读取优质的卖单，all 为全部卖单
+
+statusType 值active 表示活跃的卖单 unActive 表示卖光了的卖单
+```
+[
+  {
+    "orderId": "062690F2FB389B8371373EBDC311C0423AA4750F",
+    "address": "lambdamineroper1r8ls57p6rzgcz4l8ah9qnadu9lyqwwqv22v4h3",
+    "price": "5000000",
+    "rate": "1.000000000000000000",
+    "amount": [
+      {
+        "denom": "ulamb",
+        "amount": "49950000000"
+      }
+    ],
+    "sellSize": "10000",
+    "unusedSize": "9990",
+    "status": "0",
+    "createTime": "2020-07-16T16:11:32.793384537Z",
+    "cancelTimeDuration": "3600000000000",
+    "marketAddress": "lambdamarketoper1a83p8s9gs5hua09xn5ktmahepst3vzg9rjjlzy",
+    "minBuySize": "1",
+    "minDuration": "2592000000000000",
+    "maxDuration": "155520000000000000",
+    "reserve1": ""
+  }
+]
+```
+
+2 发送购买空间的交易
+
+接口文档 http://docs.lambdastorage.com/Wallet-API/#6_2
+
+签名前的数据结构
+```
+{
+    "account_number": "535",
+    "chain_id": "lambda-chain-test4.0",
+    "fee": {
+        "amount": [{
+            "amount": "369293",
+            "denom": "ulamb"
+        }],
+        "gas": "147717"
+    },
+    "memo": "",
+    "msgs": [{
+        "type": "lambda/MsgCreateBuyOrder",
+        "value": {
+            "address": "lambda1k6rxrmly7hz0ewh7gth2dj48mv3xs9yz8ffauw", 购买人的地址
+            "duration": "2592000000000000", 购买的时长
+            "marketName": "lambdamarket",市场名称
+            "sellOrderId": "00A482D80ACAAA0BEDABB0AA6BE25598967E69DF",卖单id
+            "size": "1"   购买空间大小
+        }
+    }],
+    "sequence": "56083"
+}
+```
+购买时长的单位为纳秒，购买的最短时间为1个月
+
+2592000000000000 是一个月（30天）
+
+lambdamarket 为默认的市场，
+
+
+发送的数据结构
+
+数据也是post到/txs 接口
+```
+{
+    "tx": {
+        "msg": [{
+            "type": "lambda/MsgCreateBuyOrder",
+            "value": {
+                "address": "lambda1k6rxrmly7hz0ewh7gth2dj48mv3xs9yz8ffauw",
+                "duration": "2592000000000000",
+                "marketName": "lambdamarket",
+                "sellOrderId": "00A482D80ACAAA0BEDABB0AA6BE25598967E69DF",
+                "size": "1"
+            }
+        }],
+        "fee": {
+            "amount": [{
+                "amount": "369293",
+                "denom": "ulamb"
+            }],
+            "gas": "147717"
+        },
+        "signatures": [{
+            "signature": "pUkiUoF9A1j02aTs1F9IHOOL57sMONAMr/Jj/Y6+UucN+KN03fTbeDvWARuSGTp2els2iPg4fMSm01BDSkNGtA==",
+            "pub_key": {
+                "type": "tendermint/PubKeySecp256k1",
+                "value": "AubWE19RlYW3sJZolichLXGu9FP8v00mV3f5/PQqYciO"
+            }
+        }],
+        "memo": ""
+    },
+    "mode": "block"
+}
+```
+### 启动s3
+
+本地测试 可以通过钱包中的订单启动s3
+
+测试环境生产环境需要下载安装lambda 矿工程序安装包，里面包含了s3
+
+s3 的说明文档 http://docs.lambdastorage.com/S3-Gateway-API/
+
+
+### s3的sdk和基础api使用
+推荐使用minio 创建Bucket，上传、下载文件 
+
+sdk 相关 https://docs.min.io/docs/golang-client-quickstart-guide
+
+目前仅支持 创建Bucket，上传、下载文件 相关接口，其他sdk其他接口s3暂不支持
+
+[调用s3举例](./s3file.js)
+
+```
+var Minio = require('minio')
+```
+
+```
+//初始化
+var minioClient = new Minio.Client({
+    endPoint: '127.0.0.1',
+    port: 8091,
+    accessKey: 'lambda1',
+    secretKey: '123456781',
+    signature_version:'s3v4',
+    useSSL: false,
+});
+// 创建bucket
+   minioClient.makeBucket('mybucket', '', function(err) {
+     if (err) return console.log('Error creating bucket.', err)
+     console.log('Bucket created successfully .')
+   })
+
+// 获取Buckets
+minioClient.listBuckets(function(err, buckets) {
+    if (err) return console.log(err)
+    console.log('buckets :', buckets)
+  })
+
+//上传文件
+var fs = require('fs')
+var file = './README.md'
+var fileStream = Fs.createReadStream(file)
+var fileStat = Fs.stat(file, function(err, stats) {
+  if (err) {
+    return console.log(err)
+  }
+  minioClient.putObject('mybucket', 'README.md', fileStream, stats.size, function(err, etag) {
+    console.log('-----')
+    return console.log(err, etag) // err should be null
+  })
+})
+//下载文件
+var size = 0;
+var data = '';
+minioClient.getObject('mybucket', 'README.md', function (err, dataStream) {
+  if (err) {
+    return console.log(err)
+  }
+  var myWriteStream = fs.createWriteStream('./README2.md')
+  dataStream.pipe(myWriteStream);
+  dataStream.on('data', function (chunk) {
+    size += chunk.length
+  })
+  dataStream.on('end', function () {
+    console.log('End. Total size = ' + size)
+  })
+  dataStream.on('error', function (err) {
+    console.log(err)
+  })
+
+})
+
+```
+
+
