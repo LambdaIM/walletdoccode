@@ -18,7 +18,7 @@ minioClient.listBuckets(function (err, buckets) {
 //创建bucket
 minioClient.makeBucket('mybucket', '', function (err) {
   if (err) return console.log('Error creating bucket.', err)
-  console.log('Bucket created successfully in ')
+  console.log('Bucket created successfully  ')
 })
 
 //上传文件
