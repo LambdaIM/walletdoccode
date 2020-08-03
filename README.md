@@ -808,7 +808,9 @@ s3 的说明文档 http://docs.lambdastorage.com/S3-Gateway-API/
 
 
 ### s3的sdk和基础api使用
-推荐使用minio 创建Bucket，上传、下载文件
+推荐使用minio 创建Bucket，上传、下载文件 
+
+sdk 相关 https://docs.min.io/docs/golang-client-quickstart-guide
 
 目前仅支持 创建Bucket，上传、下载文件 相关接口，其他sdk其他接口s3暂不支持
 
