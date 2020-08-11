@@ -693,7 +693,8 @@ console.log('lambdapubkey',lambdapubkey)
 
 ## 创建完账户、能够签名并发送交易，就可以从矿工哪里购买空间，使用s3 api上传文件了
 ### 购买空间相关的api和数据结构
-1 获取矿工在售卖空间列表或在浏览器中选择合适矿工的卖单
+#### 1 获取矿工在售卖空间列表或在浏览器中选择合适矿工的卖单 (购买lambda市场的空间） 
+支付代币为lamb
 ```
 /market/sellorders/${marketName}/${orderType}/${statusType}/${page}/${limit}
 ```
@@ -728,7 +729,7 @@ statusType 值active 表示活跃的卖单 unActive 表示卖光了的卖单
 ]
 ```
 
-2 发送购买空间的交易
+#### 2 发送购买空间的交易
 
 接口文档 http://docs.lambdastorage.com/Wallet-API/#6_2
 
@@ -800,14 +801,82 @@ lambdamarket 为默认的市场，
     "mode": "block"
 }
 ```
+#### 3 购买资产市场的空间
+
+支付代币为 具体市场使用的代币
+
+首先在区块链浏览器的资产市场中，找到一个矿工，
+
+找到矿工的操作地址 例如 lambdamineroper1eq5mkwjckfuljcu9yxkqd2kwfpj2zr0fud6un6
+
+拼接用于签名的数据结构 例如购买1gb空间1个月
+````
+{
+	"account_number": "67",
+	"chain_id": "lambda-chain-test5.0",
+	"fee": {
+		"amount": [{
+			"amount": "663",
+			"denom": "ulamb"
+		}],
+		"gas": "26529"
+	},
+	"memo": "",
+	"msgs": [{
+		"type": "lambda/MsgDamCreateBuyOrder",
+		"value": {
+			"address": "lambda19v66hl7dlryn44z65l78sg5nmhqys6pcw6u6lt",
+			"asset": "uxxb", //资产市场使用的代币
+			"duration": "2592000000000000",//购买时长
+			"minerAddress": "lambdamineroper1eq5mkwjckfuljcu9yxkqd2kwfpj2zr0fud6un6", //矿工操作地址
+			"size": "1"//空间大小
+		}
+	}],
+	"sequence": "2"
+}
+````
+#### 4 发送交易
+
+发送的数据结构
+````
+{
+	"tx": {
+		"msg": [{
+			"type": "lambda/MsgDamCreateBuyOrder",
+			"value": {
+				"address": "lambda19v66hl7dlryn44z65l78sg5nmhqys6pcw6u6lt",
+				"asset": "uxxb",
+				"duration": "2592000000000000",
+				"minerAddress": "lambdamineroper1eq5mkwjckfuljcu9yxkqd2kwfpj2zr0fud6un6",
+				"size": "1"
+			}
+		}],
+		"fee": {
+			"amount": [{
+				"amount": "663",
+				"denom": "ulamb"
+			}],
+			"gas": "26529"
+		},
+		"signatures": [{
+			"signature": "dN84i4JqIYe3f9DUJnO2oJMz5G4fnHrtMU/GTmcEdMowXjiMsX+dyLQtnTeuBAWYj6D50I8UwuvI78dQh3G9vw==",
+			"pub_key": {
+				"type": "tendermint/PubKeySecp256k1",
+				"value": "Ayu4kEOcFAKZvujHyEvnDHqolsURJxt/T9dSM+Pi0Fda"
+			}
+		}],
+		"memo": ""
+	},
+	"mode": "async"
+}
+````
 ### 启动s3
 
-本地测试 可以通过钱包中的订单启动s3
-
-测试环境生产环境需要下载安装lambda 矿工程序安装包，里面包含了s3
+下载和配置lambda s3 环境 http://docs.lambdastorage.com/DApp-Develop-Guide/#lambda-s3-gateway
 
 s3 的说明文档 http://docs.lambdastorage.com/S3-Gateway-API/
 
+lambda 市场和资产市场，购买的空间都支持lambdas3 上传和下载文件
 
 ### s3的sdk和基础api使用
 推荐使用minio 创建Bucket，上传、下载文件 
